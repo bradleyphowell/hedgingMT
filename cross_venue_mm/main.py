@@ -1,11 +1,11 @@
 import asyncio
-from .config import AppConfig
-from .wiring import App
-from .types import FillOnX
+from .plumbing.config import AppConfig
+from .plumbing.wiring import App
+from .plumbing.types import FillOnX
 
 async def main():
-    cfg = AppConfig()
-    app = App(cfg)
+    cfg = AppConfig()   #defines the configuration in config.py
+    app = App(cfg)      #wires up components in wiring.py from above configs
 
     def on_trade_y(tr):
         app.vwap.update(tr.px, tr.sz)
@@ -28,7 +28,7 @@ async def main():
     async def hedge_on_fill_listener():
         # Pseudocode: subscribe to fills on X
         while True:
-            fill = await _recv_fill_x()  # returns FillOnX
+            fill = await FillOnX()  # returns FillOnX
             # Hedge at Y using microprice as ref
             book = app.md_y.last_book()
             ref_px = (book.bid_px+book.ask_px)/2 if book else fill.px

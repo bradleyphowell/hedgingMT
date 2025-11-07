@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from .config import AppConfig
+from ..plumbing.config import AppConfig
 from .indicators import microprice
-from .types import BookTop
+from ..plumbing.types import BookTop
 
 @dataclass
 class Quote:

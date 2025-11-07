@@ -1,11 +1,11 @@
 from .config import AppConfig
 from .marketdata_y import MarketDataY
-from .indicators import RollingVWAP, RollingVol, microprice
-from .inventory import InventoryState, InventorySkew
-from .quote_engine import QuoteEngine
-from .venue_x_maker import VenueXMaker
-from .execution_y import ExecutionY
-from .hedger import Hedger
+from ..model.indicators import RollingVWAP, RollingVol, microprice
+from ..model.inventory import InventoryState, InventorySkew
+from ..model.quote_engine import QuoteEngine
+from ..venue_x_maker import VenueXMaker
+from ..execution_y import ExecutionY
+from ..hedger import Hedger
 
 class App:
     def __init__(self, cfg:AppConfig):

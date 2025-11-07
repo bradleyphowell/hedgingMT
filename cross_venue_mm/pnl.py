@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from .types import FillOnX
-from .execution_y import ExecReport
+from .plumbing.types import FillOnX
+from execution_y import ExecReport
 
 @dataclass
 class TradePnL:

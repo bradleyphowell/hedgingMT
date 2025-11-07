@@ -1,6 +1,6 @@
 from collections import deque
 from math import log, sqrt
-from .types import BookTop
+from ..plumbing.types import BookTop
 
 class RollingVWAP:
     def __init__(self, n_trades:int=100):

@@ -9,6 +9,7 @@ class MarketDataY:
         self._last_trade: Trade|None = None
 
     async def run(self, on_book:Callable[[BookTop],None], on_trade:Callable[[Trade],None]):
+        
         # Pseudocode: connect websocket, subscribe to trades + book
         # await ws.send(subscribe_msg)
         while True:

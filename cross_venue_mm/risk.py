@@ -1,4 +1,4 @@
-from .config import RiskLimits
+from .plumbing.config import RiskLimits
 
 class RiskManager:
     def __init__(self, limits:RiskLimits):

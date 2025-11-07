@@ -16,7 +16,7 @@ class HedgePolicy:
 
 @dataclass(frozen=True)
 class RiskLimits:
-    max_inventory_usd: float = 1_000_000
+    max_inventory_usd: float = 10000.0
     max_order_rate_per_s: float = 5.0
     max_venue_y_down_ms: int = 3000
 
