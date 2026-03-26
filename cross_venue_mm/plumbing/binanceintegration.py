@@ -119,6 +119,12 @@ class BinanceIntegration:
     def last_book(self) -> Optional[BookTop]:
         return self._last_book
 
+    def fetch_book_top(self, depth_limit: int = 5) -> Optional[BookTop]:
+        return self._fetch_book_top(depth_limit)
+
+    def fetch_last_trade(self) -> Optional[Trade]:
+        return self._fetch_last_trade()
+
     # --------------- Public: Orders ---------------
     def place_order(
         self,

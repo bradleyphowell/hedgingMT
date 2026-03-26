@@ -27,7 +27,7 @@ class Hedger:
             # post around micro +/- bps
             post_px = ref_px * (1 - self.cfg.hedge.post_bps_from_micro/1e4 if hedge_side=="buy"
                                 else 1 + self.cfg.hedge.post_bps_from_micro/1e4)
-            rep = await self.exec.post_maker(hedge_side, maker_qty, post_px)  # type: ignore
+            rep = await self.exec.post_maker(hedge_side, post_px, maker_qty)
             reports.append(rep)
 
         return reports

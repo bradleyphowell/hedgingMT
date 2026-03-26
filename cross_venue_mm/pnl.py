@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from .plumbing.types import FillOnX
-from execution_y import ExecReport
+from .execution_y import ExecReport
 
 @dataclass
 class TradePnL:
@@ -15,8 +15,8 @@ def compute_pnl(fill_x:FillOnX, hedge_reports:list[ExecReport])->TradePnL:
     gross = 0.0; fees = 0.0
     for r in hedge_reports:
         if fill_x.side == "sell":  # we sold on X, bought on Y
-            gross += (px_x - r.avg_px) * (r.filled/qty) * qty
+            gross += (px_x - r.avg_px) * r.filled
         else:                      # we bought on X, sold on Y
-            gross += (r.avg_px - px_x) * (r.filled/qty) * qty
+            gross += (r.avg_px - px_x) * r.filled
         fees += (r.fee_bps/1e4) * r.avg_px * r.filled
     return TradePnL(gross_usd=gross, fees_usd=fees, net_usd=gross-fees)

@@ -10,6 +10,9 @@ class BookTop:
     ask_px: float
     ask_sz: float
     ts_ms: int
+    update_id: int | None = None
+    event_ts_ms: int | None = None
+    recv_ts_ms: int | None = None
 
 @dataclass
 class Trade:
@@ -17,6 +20,9 @@ class Trade:
     sz: float
     side: Side  # taker side on Y
     ts_ms: int
+    trade_id: int | None = None
+    event_ts_ms: int | None = None
+    recv_ts_ms: int | None = None
 
 @dataclass
 class FillOnX:

@@ -1,5 +1,5 @@
 import asyncio
-from .plumbing.types import Side
+from .plumbing.types import FillOnX, Side
 from dataclasses import dataclass
 
 @dataclass
@@ -12,6 +12,7 @@ class VenueXMaker:
         self.symbol = symbol
         self.tokens = asyncio.Semaphore(int(max_rate_per_s))  # basic rate control
         self.live = LiveQuoteIDs()
+        self._fills: asyncio.Queue[FillOnX] = asyncio.Queue()
 
     async def upsert_quotes(self, bid:float, ask:float, size:float):
         async with self.tokens:
@@ -23,6 +24,12 @@ class VenueXMaker:
         # TODO: implement venue X REST/WS order API
         return "oid123"
 
+    async def next_fill(self)->FillOnX:
+        return await self._fills.get()
+
+    def record_fill(self, fill:FillOnX)->None:
+        self._fills.put_nowait(fill)
+
     async def cancel_all(self):
         # cancel live orders
-        ...
+        self.live = LiveQuoteIDs()

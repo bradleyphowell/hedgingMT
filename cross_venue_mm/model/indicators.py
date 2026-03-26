@@ -8,6 +8,10 @@ class RollingVWAP:
         self.vol = 0.0
         self.dol = 0.0
     def update(self, price:float, size:float):
+        if self.prq.maxlen and len(self.prq) == self.prq.maxlen:
+            old_price, old_size = self.prq[0]
+            self.vol -= old_size
+            self.dol -= old_price * old_size
         self.prq.append((price, size))
         self.vol += size; self.dol += price*size
     @property
