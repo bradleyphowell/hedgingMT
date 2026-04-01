@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>hedgingMT OFI/AS Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Binance OFI / AS Monitor</p>
+        <h1>Single-Venue Indicative Quotes</h1>
+        <p class="subhead">Live Binance ladder, indicative OFI/AS quoting spread, public tape, and rolling 10-minute price action.</p>
+      </div>
+      <form id="market-form" class="market-form">
+        <label for="market-input">Market</label>
+        <div class="market-row">
+          <input id="market-input" name="market" value="SUI" autocomplete="off" spellcheck="false">
+          <button type="submit">Load</button>
+        </div>
+        <div id="preset-bar" class="preset-bar"></div>
+      </form>
+    </header>
+
+    <section class="meta-strip">
+      <div class="meta-card">
+        <span class="meta-label">Selected</span>
+        <span id="selected-market" class="meta-value">SUI</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Binance</span>
+        <span id="binance-symbol" class="meta-value">SUIUSDT</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Preview Mode</span>
+        <span id="quote-mode" class="meta-value">Idle</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Current OFI</span>
+        <span id="current-ofi" class="meta-value">--</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Last Refresh</span>
+        <span id="updated-at" class="meta-value">Waiting...</span>
+      </div>
+    </section>
+
+    <section class="venue-card controls-card">
+      <div class="panel-head controls-head">
+        <div>
+          <p class="venue-kicker">Runtime Inputs</p>
+          <h2>Live Parameters</h2>
+        </div>
+        <div class="controls-actions">
+          <span id="controls-status" class="micro-stat">Waiting for config...</span>
+          <button id="apply-inputs" type="button">Apply Inputs</button>
+        </div>
+      </div>
+      <div id="controls-error" class="error-banner hidden"></div>
+      <form id="controls-form" class="controls-form">
+        <div id="controls-grid" class="controls-grid"></div>
+      </form>
+    </section>
+
+    <section class="overview-grid">
+      <section class="venue-card summary-card pnl-summary">
+        <div class="panel-head">
+          <div>
+            <p class="venue-kicker">Account Snapshot</p>
+            <h2>Live PnL</h2>
+          </div>
+          <div class="stat-stack">
+            <span class="micro-label">Mark</span>
+            <span id="pnl-mark" class="micro-value">--</span>
+          </div>
+        </div>
+        <div class="metric-board metric-board-wide">
+          <div class="metric-block emphasis">
+            <span class="micro-label">Net PnL</span>
+            <span id="net-pnl" class="headline-value metric-neutral">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Realized</span>
+            <span id="realized-pnl" class="stat-value metric-neutral">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Unrealized</span>
+            <span id="unrealized-pnl" class="stat-value metric-neutral">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Fees</span>
+            <span id="fees-paid" class="stat-value metric-neutral">--</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="venue-card summary-card exposure-summary">
+        <div class="panel-head">
+          <div>
+            <p class="venue-kicker">Inventory Snapshot</p>
+            <h2>Exposure</h2>
+          </div>
+          <span id="position-side" class="status-pill status-idle">Flat</span>
+        </div>
+        <div class="metric-board">
+          <div class="metric-block">
+            <span class="micro-label">Position Qty</span>
+            <span id="position-qty" class="stat-value">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Net Exposure</span>
+            <span id="net-exposure" class="stat-value metric-neutral">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Gross Exposure</span>
+            <span id="gross-exposure" class="stat-value">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Avg Entry</span>
+            <span id="avg-entry" class="stat-value">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Quoted Bid</span>
+            <span id="working-bid-usd" class="stat-value">--</span>
+          </div>
+          <div class="metric-block">
+            <span class="micro-label">Quoted Ask</span>
+            <span id="working-ask-usd" class="stat-value">--</span>
+          </div>
+          <div class="metric-block wide">
+            <span class="micro-label">Total Working Notional</span>
+            <span id="working-total-usd" class="stat-value">--</span>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <main class="content-grid">
+      <section class="venue-card book-panel">
+        <div class="venue-header">
+          <div>
+            <p class="venue-kicker">Public Order Book</p>
+            <h2>Binance</h2>
+          </div>
+          <div class="status-group status-stack">
+            <span id="binance-status" class="status-pill status-idle">Idle</span>
+            <div class="stat-stack">
+              <span id="binance-spread" class="micro-stat">Spread --</span>
+              <span id="binance-quote-spread" class="micro-stat micro-stat-strong">Quoted --</span>
+            </div>
+          </div>
+        </div>
+        <div class="micro-grid">
+          <div><span class="micro-label">Mid</span><span id="binance-mid" class="micro-value">--</span></div>
+          <div><span class="micro-label">Quote Mid</span><span id="quote-mid" class="micro-value">--</span></div>
+          <div><span class="micro-label">Updated</span><span id="binance-age" class="micro-value">--</span></div>
+        </div>
+        <div id="binance-error" class="error-banner hidden"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>My Bid</th><th>Bid Sz</th><th>Bid</th><th>Offer</th><th>Offer Sz</th><th>My Ask</th></tr>
+            </thead>
+            <tbody id="binance-book"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="venue-card chart-card">
+        <div class="panel-head">
+          <div>
+            <p class="venue-kicker">Public Tape</p>
+            <h2>10-Minute Price Action</h2>
+          </div>
+          <div class="stat-stack">
+            <span class="micro-label">Last Price</span>
+            <span id="chart-last" class="micro-value">--</span>
+          </div>
+        </div>
+        <div class="chart-frame">
+          <div class="chart-scale">
+            <span id="chart-high">--</span>
+            <span id="chart-low">--</span>
+          </div>
+          <svg id="price-chart" class="price-chart" viewBox="0 0 640 240" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="chart-axis">
+          <span id="chart-start">--</span>
+          <span id="chart-end">--</span>
+        </div>
+      </section>
+
+      <section class="venue-card trades-card">
+        <div class="panel-head">
+          <div>
+            <p class="venue-kicker">Public Trades</p>
+            <h2>Last 10 Prints</h2>
+          </div>
+          <span id="trade-count" class="micro-stat">0 prints</span>
+        </div>
+        <div class="trades-wrap">
+          <table class="trades-table">
+            <thead>
+              <tr><th>Time</th><th>Side</th><th>Price</th><th>Size</th></tr>
+            </thead>
+            <tbody id="recent-trades"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

@@ -18,16 +18,16 @@ class BookTop:
 class Trade:
     px: float
     sz: float
-    side: Side  # taker side on Y
+    side: Side
     ts_ms: int
     trade_id: int | None = None
     event_ts_ms: int | None = None
     recv_ts_ms: int | None = None
 
 @dataclass
-class FillOnX:
+class Fill:
     px: float
     sz: float
-    side: Side  # our perspective on X: if we were lifted, side="sell"
+    side: Side  # our perspective; if our resting ask was hit, side="sell"
     ts_ms: int
     order_id: str

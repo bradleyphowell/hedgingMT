@@ -21,7 +21,7 @@ class DepthEvent:
     recv_ts_ms: int
 
 
-class MarketDataY:
+class BinanceMarketData:
     def __init__(self, symbol: str, *, testnet: bool = False):
         self.symbol = symbol.upper()
         self._stream_symbol = self.symbol.lower()
@@ -97,7 +97,7 @@ class MarketDataY:
                     continue
 
                 if not self._apply_depth_event(depth_event):
-                    raise RuntimeError("Missed a depth update; reconnecting to resync venue Y order book.")
+                    raise RuntimeError("Missed a depth update; reconnecting to resync the Binance order book.")
                 book = self._build_book_top(
                     event_ts_ms=depth_event.event_ts_ms,
                     recv_ts_ms=depth_event.recv_ts_ms,
@@ -117,12 +117,12 @@ class MarketDataY:
             event for event in buffered_depth_events if event.final_update_id > self._last_update_id
         ]
         if relevant_events and relevant_events[0].first_update_id > self._last_update_id + 1:
-            raise RuntimeError("Buffered depth events do not bridge the venue Y snapshot.")
+            raise RuntimeError("Buffered depth events do not bridge the Binance depth snapshot.")
 
         books: list[BookTop] = []
         for event in relevant_events:
             if not self._apply_depth_event(event):
-                raise RuntimeError("Depth event gap encountered while initializing venue Y order book.")
+                raise RuntimeError("Depth event gap encountered while initializing the Binance order book.")
             book = self._build_book_top(
                 event_ts_ms=event.event_ts_ms,
                 recv_ts_ms=event.recv_ts_ms,
@@ -264,3 +264,6 @@ class MarketDataY:
 
     def last_trade(self) -> Trade | None:
         return self._last_trade
+
+
+MarketDataY = BinanceMarketData

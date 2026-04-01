@@ -13,7 +13,7 @@ class QuoteEngine:
 
     def base_halfspread_bps(self, sigma_bps:float, exp_slippage_bps:float)->float:
         # cover taker fee + expected slippage + a small vol term
-        fee = self.cfg.fees_y.taker_bps
+        fee = self.cfg.fees.taker_bps
         vol_term = max(0.0, 0.35 * sigma_bps**0.5)  # light vol sensitivity
         return fee + exp_slippage_bps + vol_term
 

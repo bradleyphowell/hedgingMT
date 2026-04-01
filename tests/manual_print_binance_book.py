@@ -7,20 +7,20 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from cross_venue_mm.plumbing.config import AppConfig
-from cross_venue_mm.plumbing.marketdata_y import MarketDataY
+from cross_venue_mm.plumbing.marketdata_y import BinanceMarketData
 from cross_venue_mm.plumbing.types import BookTop
 
 
 async def main() -> None:
     cfg = AppConfig()
-    parser = argparse.ArgumentParser(description="Print top-of-book snapshots from venue Y.")
+    parser = argparse.ArgumentParser(description="Print top-of-book snapshots from Binance.")
     parser.add_argument("--symbol", default=cfg.symbol, help="Symbol to query, default comes from AppConfig.")
     parser.add_argument("--samples", type=int, default=10, help="Number of book snapshots to print.")
     parser.add_argument("--interval", type=float, default=0.0, help="Optional delay between printed snapshots.")
     parser.add_argument("--timeout", type=float, default=20.0, help="Seconds to wait for each book update.")
     args = parser.parse_args()
 
-    market_data = MarketDataY(args.symbol)
+    market_data = BinanceMarketData(args.symbol)
     clock_offset_ms = market_data.estimate_clock_offset_ms()
     book_queue: asyncio.Queue[BookTop] = asyncio.Queue()
 

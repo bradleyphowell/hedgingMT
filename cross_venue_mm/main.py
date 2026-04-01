@@ -1,46 +1,64 @@
 import asyncio
+import time
+
 from .plumbing.config import AppConfig
-from .plumbing.wiring import App
+from .plumbing.wiring import BinanceMarketMakerApp
 
-async def main():
-    cfg = AppConfig()   #defines the configuration in config.py
-    app = App(cfg)      #wires up components in wiring.py from above configs
 
-    def on_trade_y(tr):
-        app.vwap.update(tr.px, tr.sz)
-        app.rvol.update(tr.px)
+async def main() -> None:
+    cfg = AppConfig()
+    app = BinanceMarketMakerApp(cfg)
 
-    def on_book_y(book):
-        pass  # could compute microprice if needed here
+    def on_trade(trade) -> None:
+        app.vwap.update(trade.px, trade.sz)
+        app.rvol.update(trade.px)
 
-    async def quoting_loop():
+    def on_book(book) -> None:
+        app.strategy.on_book(book)
+
+    async def quoting_loop() -> None:
         while True:
-            book = app.md_y.last_book()
-            if not book:
-                await asyncio.sleep(0.05); continue
+            book = app.market_data.last_book()
+            if book is None:
+                await asyncio.sleep(0.05)
+                continue
+
+            market_data_age_ms = max(0, int(time.time() * 1000) - (book.recv_ts_ms or book.ts_ms))
+            if not app.risk.check_market_data_health(market_data_age_ms):
+                await app.maker.cancel_all()
+                await asyncio.sleep(cfg.quote.base_refresh_ms / 1000)
+                continue
+
+            mid_px = (book.bid_px + book.ask_px) / 2
+            if not app.risk.check_inventory(app.inventory.qty, mid_px):
+                await app.maker.cancel_all()
+                await asyncio.sleep(cfg.quote.base_refresh_ms / 1000)
+                continue
+
             sigma_bps = app.rvol.sigma_bps()
-            inv_skew_px = app.skew.reservation_skew(sigma_bps, app.inv.qty, (book.bid_px+book.ask_px)/2)
-            q = app.qe.compute(book, sigma_bps, inv_skew_px, size_usd=cfg.quote.size_usd)
-            await app.maker_x.upsert_quotes(q.bid, q.ask, size=cfg.quote.size_usd/q.mid_ref)
-            await asyncio.sleep(cfg.quote.base_refresh_ms/1000)
+            inv_skew_px = app.skew.reservation_skew(sigma_bps, app.inventory.qty, mid_px)
+            plan = app.strategy.make_quote_plan(book, sigma_bps, inv_skew_px, size_usd=cfg.quote.size_usd)
+            await app.maker.upsert_quotes(
+                plan.bid,
+                plan.ask,
+                bid_size=plan.bid_size,
+                ask_size=plan.ask_size,
+            )
+            await asyncio.sleep(cfg.quote.base_refresh_ms / 1000)
 
-    async def hedge_on_fill_listener():
+    async def fill_listener() -> None:
         while True:
-            fill = await app.maker_x.next_fill()
-            # Hedge at Y using microprice as ref
-            book = app.md_y.last_book()
-            ref_px = (book.bid_px+book.ask_px)/2 if book else fill.px
-            reps = await app.hedger.hedge_fill(fill.side, fill.sz, ref_px)
-            # Update inventory
-            app.inv.qty += (-fill.sz if fill.side=="sell" else fill.sz)  # we sold -> -qty; we bought -> +qty
-            # Compute pnl, log
-            # pnl = compute_pnl(fill, reps)  # optional logging
+            fill = await app.maker.next_fill()
+            fee_bps = cfg.fees.maker_bps
+            app.pnl.apply_fill(fill, fee_bps=fee_bps)
+            app.inventory.qty = app.pnl.position_qty
 
     await asyncio.gather(
-        app.md_y.run(on_book=on_book_y, on_trade=on_trade_y),
+        app.market_data.run(on_book=on_book, on_trade=on_trade),
         quoting_loop(),
-        hedge_on_fill_listener(),
+        fill_listener(),
     )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

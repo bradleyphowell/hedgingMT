@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>hedgingMT Latency Dashboard</title>
+  <link rel="stylesheet" href="/static/latency.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Binance Market-Making Monitor</p>
+        <h1>System Latency Dashboard</h1>
+        <p class="subhead">Live view of market-data receive latency, local book processing, quote generation, maker-upsert timing, queue depth, and placeholder order latency.</p>
+      </div>
+      <form id="market-form" class="market-form">
+        <label for="market-input">Market</label>
+        <div class="market-row">
+          <input id="market-input" name="market" value="SUI" autocomplete="off" spellcheck="false">
+          <button type="submit">Load</button>
+        </div>
+        <div id="preset-bar" class="preset-bar"></div>
+      </form>
+    </header>
+
+    <section class="meta-strip">
+      <div class="meta-card">
+        <span class="meta-label">Selected</span>
+        <span id="selected-market" class="meta-value">SUI</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Binance</span>
+        <span id="binance-symbol" class="meta-value">SUIUSDT</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Clock Offset</span>
+        <span id="clock-offset" class="meta-value">--</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Last Refresh</span>
+        <span id="updated-at" class="meta-value">Waiting...</span>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card emphasis">
+        <span class="summary-label">Book Event p50</span>
+        <span id="book-event-p50" class="summary-value">--</span>
+        <span class="summary-help">Exchange depth event to local receive.</span>
+      </article>
+      <article class="summary-card emphasis">
+        <span class="summary-label">Decision to Quote p95</span>
+        <span id="decision-to-quote-p95" class="summary-value">--</span>
+        <span class="summary-help">Full local path from book receive to maker upsert.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Book Processing p95</span>
+        <span id="book-process-p95" class="summary-value">--</span>
+        <span class="summary-help">Strategy state update on each book event.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Quote Creation p50</span>
+        <span id="quote-create-p50" class="summary-value">--</span>
+        <span class="summary-help">Time to build a fresh OFI/AS quote plan.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Maker Upsert p95</span>
+        <span id="maker-upsert-p95" class="summary-value">--</span>
+        <span class="summary-help">Current local maker adapter path.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Trade Event p50</span>
+        <span id="trade-event-p50" class="summary-value">--</span>
+        <span class="summary-help">Exchange trade event to local receive.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Book Msg/s</span>
+        <span id="book-rate" class="summary-value">--</span>
+        <span class="summary-help">Depth update arrival rate over 5 seconds.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Trade Msg/s</span>
+        <span id="trade-rate" class="summary-value">--</span>
+        <span class="summary-help">Trade event arrival rate over 5 seconds.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Current Book Age</span>
+        <span id="book-age" class="summary-value">--</span>
+        <span class="summary-help">Time since the last book event was received.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Book Queue Depth</span>
+        <span id="book-queue-depth" class="summary-value">--</span>
+        <span class="summary-help">Pending book updates waiting for local work.</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Trade Queue Depth</span>
+        <span id="trade-queue-depth" class="summary-value">--</span>
+        <span class="summary-help">Pending trade updates waiting for local work.</span>
+      </article>
+      <article class="summary-card placeholder-card">
+        <span class="summary-label">Order Ack RTT</span>
+        <span id="order-ack" class="summary-value">Pending</span>
+        <span class="summary-help">Placeholder until live Binance order placement is wired.</span>
+      </article>
+    </section>
+
+    <main class="content-grid">
+      <section class="panel stage-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Latency Breakdown</p>
+            <h2>Pipeline Stages</h2>
+          </div>
+          <span class="micro-stat">Live rolling summary</span>
+        </div>
+        <div class="table-wrap">
+          <table class="latency-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Status</th>
+                <th>Last</th>
+                <th>p50</th>
+                <th>p95</th>
+                <th>Mean</th>
+                <th>Max</th>
+                <th>Samples</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="latency-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel notes-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">What To Watch</p>
+            <h2>Health Checks</h2>
+          </div>
+        </div>
+        <div class="note-stack">
+          <article class="note-card">
+            <span class="note-title">Receive Latency</span>
+            <p>Watch Book Event to Local Receive and Trade Event to Local Receive for exchange-side or network drift.</p>
+          </article>
+          <article class="note-card">
+            <span class="note-title">Processing Drift</span>
+            <p>If queue depth grows above zero and Decision to Quote Post expands, the strategy loop is starting to fall behind incoming data.</p>
+          </article>
+          <article class="note-card">
+            <span class="note-title">Maker Path</span>
+            <p>Maker Upsert is local-only for now. Order Ack RTT stays as a placeholder until live Binance order placement and exchange acknowledgements are connected.</p>
+          </article>
+          <article class="note-card">
+            <span class="note-title">Clock Offset</span>
+            <p>The displayed latencies use Binance server-time offset estimation so event timestamps and local receive timestamps stay on the same clock basis.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/latency.js" defer></script>
+</body>
+</html>

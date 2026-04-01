@@ -3,37 +3,12 @@ import hmac
 import hashlib
 import time
 import json
-from dataclasses import dataclass
 from typing import Callable, Optional, Dict, Any, Iterable
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-
-@dataclass
-class BookTop:
-    bid_px: float
-    bid_sz: float
-    ask_px: float
-    ask_sz: float
-    ts_ms: int
-
-
-@dataclass
-class Trade:
-    px: float
-    sz: float
-    side: str  # "buy" or "sell" (taker side)
-    ts_ms: int
-
-
-@dataclass
-class Fill:
-    px: float
-    sz: float
-    side: str  # our perspective; if we sold, side="sell"
-    ts_ms: int
-    order_id: str
+from .types import BookTop, Fill, Trade
 
 
 class BinanceAPIError(Exception):
@@ -215,9 +190,10 @@ class BinanceIntegration:
         asks: Iterable[list] = data.get("asks", [])
         if not bids or not asks:
             return None
+        ts_ms = self._now_ms()
         bid_px, bid_sz = float(bids[0][0]), float(bids[0][1])
         ask_px, ask_sz = float(asks[0][0]), float(asks[0][1])
-        return BookTop(bid_px=bid_px, bid_sz=bid_sz, ask_px=ask_px, ask_sz=ask_sz, ts_ms=self._now_ms())
+        return BookTop(bid_px=bid_px, bid_sz=bid_sz, ask_px=ask_px, ask_sz=ask_sz, ts_ms=ts_ms, recv_ts_ms=ts_ms)
 
     def _fetch_last_trade(self) -> Optional[Trade]:
         path = "/api/v3/trades"
@@ -232,7 +208,7 @@ class BinanceIntegration:
         # trade stream returns taker side; here isBuyerMaker True => buyer was maker => taker was sell
         side = "sell" if is_buyer_maker else "buy"
         ts_ms = int(t.get("time", self._now_ms()))
-        return Trade(px=px, sz=sz, side=side, ts_ms=ts_ms)
+        return Trade(px=px, sz=sz, side=side, ts_ms=ts_ms, trade_id=int(t.get("id")) if t.get("id") is not None else None)
 
     # --------------- Internal: Private fetchers ---------------
     def _fetch_my_trades(self) -> list[Dict[str, Any]]:
